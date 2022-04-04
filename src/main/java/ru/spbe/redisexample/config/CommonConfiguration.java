@@ -6,8 +6,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import ru.spbe.redisexample.loader.ExampleLoader;
-import ru.spbe.redisexample.publisher.ExamplePublisher;
+import ru.spbe.redisexample.entity.ExampleEntity;
+import ru.spbe.redisloader.RedisLoader;
+import ru.spbe.redispublisher.RedisPublisher;
 import ru.spbe.redisstarter.Redis;
 import ru.spbe.redisstarter.RedisSet;
 
@@ -36,16 +37,16 @@ public class CommonConfiguration {
     //////////// Для публикации
 
     @Bean
-    public ExamplePublisher examplePublisher(RedisSet exampleRedisSet,
-                                             Redis redis,
-                                             ObjectMapper mapper){
-        return new ExamplePublisher(redis, exampleRedisSet, mapper);
+    public RedisPublisher<ExampleEntity> examplePublisher(RedisSet exampleRedisSet,
+                                                   Redis redis,
+                                                   ObjectMapper mapper){
+        return new  RedisPublisher<>(redis, exampleRedisSet, mapper);
     }
 //////////// Для чтения данных
     @Bean
-    public ExampleLoader exampleLoader(RedisSet exampleRedisSet,
-                                       Redis redis,
-                                       ObjectMapper mapper){
-        return new ExampleLoader(redis, exampleRedisSet, mapper);
+    public RedisLoader<ExampleEntity> exampleLoader(RedisSet exampleRedisSet,
+                                                    Redis redis,
+                                                    ObjectMapper mapper){
+        return new RedisLoader<>(ExampleEntity.class, redis, exampleRedisSet, mapper);
     }
 }

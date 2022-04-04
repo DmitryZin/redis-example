@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import ru.spbe.redisexample.entity.ExampleEntity;
-import ru.spbe.redisexample.loader.ExampleLoader;
-import ru.spbe.redisexample.publisher.ExamplePublisher;
+import ru.spbe.redisloader.RedisLoader;
+import ru.spbe.redispublisher.RedisPublisher;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,12 +31,12 @@ public class RedisExampleApplication {
 		someRepositories.add(entity2);
 
 		//сам "публицист"
-		ExamplePublisher publisher = (ExamplePublisher) context.getBean("examplePublisher");
+		RedisPublisher<ExampleEntity> publisher = (RedisPublisher<ExampleEntity>) context.getBean("examplePublisher");
 		publisher.clearValues();
 		publisher.addValues(someRepositories);
 
 		//загрузчик данных
-		ExampleLoader exampleLoader = (ExampleLoader) context.getBean("exampleLoader");
+		RedisLoader<ExampleEntity> exampleLoader = (RedisLoader<ExampleEntity>) context.getBean("exampleLoader");
 		//лист для данных
 		List<ExampleEntity> result = new ArrayList<>(exampleLoader.getListValues());
 		log.info("create result: " + result);
