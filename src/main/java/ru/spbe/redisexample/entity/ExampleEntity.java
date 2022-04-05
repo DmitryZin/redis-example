@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ExampleEntity {
-    private int id;
+    private Integer id;
     private String name;
 
     public String toString() {

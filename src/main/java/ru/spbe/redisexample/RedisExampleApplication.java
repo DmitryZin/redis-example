@@ -9,7 +9,9 @@ import ru.spbe.redisloader.RedisLoader;
 import ru.spbe.redispublisher.RedisPublisher;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static java.lang.Thread.sleep;
 
@@ -20,47 +22,39 @@ public class RedisExampleApplication {
 	public static void main(String[] args) throws JsonProcessingException, InterruptedException {
 		var context = SpringApplication.run(RedisExampleApplication.class, args);
 		// имитация изначального наполнения репозитория
-		List<ExampleEntity> someRepositories = new ArrayList<>();
+		Map<Integer, ExampleEntity> someRepositories = new HashMap<>();
 		ExampleEntity entity1 = new ExampleEntity();
 		entity1.setId(1);
 		entity1.setName("Test 1");
-		someRepositories.add(entity1);
+		someRepositories.put(entity1.getId(), entity1);
 		ExampleEntity entity2 = new ExampleEntity();
 		entity2.setId(2);
 		entity2.setName("Test 2");
-		someRepositories.add(entity2);
+		someRepositories.put(entity2.getId(), entity2);
 
 		//сам "публицист"
-		RedisPublisher<ExampleEntity> publisher = (RedisPublisher<ExampleEntity>) context.getBean("examplePublisher");
+		RedisPublisher<Integer, ExampleEntity> publisher = (RedisPublisher<Integer, ExampleEntity>) context.getBean("examplePublisher");
 		publisher.clearValues();
-		publisher.addValues(someRepositories);
-
-		//загрузчик данных
-		RedisLoader<ExampleEntity> exampleLoader = (RedisLoader<ExampleEntity>) context.getBean("exampleLoader");
-		//лист для данных
-		List<ExampleEntity> result = new ArrayList<>(exampleLoader.getListValues());
-		log.info("create result: " + result);
-		//подписываемся на обновления
-		exampleLoader.subscribe(result);
-		// ждем, иначе публикация будет раньше чем успеем подписаться
-		// чисто тестовая необходимость
+		publisher.publish(someRepositories);
+		RedisLoader<Integer, ExampleEntity> exampleLoader = (RedisLoader<Integer, ExampleEntity>) context.getBean("exampleLoader");
+		log.info("in Redis DB result: " + exampleLoader.getValues().toString());
 		sleep(5);
+		log.info("in Redis DB result: " + exampleLoader.getValues().toString());
+
 		ExampleEntity entity3 = new ExampleEntity();
 		entity3.setId(3);
 		entity3.setName("Test 3");
-		publisher.addValue(entity3);
+		publisher.publish(entity3.getId(), entity3);
+		exampleLoader.reLoad();
+		//загрузчик данных
+
+		//лист для данных
+		var result = exampleLoader.getValues();
 		log.info("add 3 result: " + result);
-		// ждем, иначе данные не актуальны
-		sleep(3);
-		log.info("add 3(after 5 ms) result: " + result);
-		// проверяем что обновилось
-		// к сожалению надо немного подождать
-		// смотрим что лежит в редисе
-		log.info("in Redis DB result: " + exampleLoader.getListValues().toString());
+		log.info("in Redis DB result: " + exampleLoader.getValues().toString());
 		// отписываемся
-		exampleLoader.unSubscribe();
-
-
+		sleep(50);
+		exampleLoader.unSubscribe(); // чтоб завершить поток и выйти из программы
 	}
 
 }

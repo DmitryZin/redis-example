@@ -1,5 +1,6 @@
 package ru.spbe.redisexample.config;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,7 +10,6 @@ import org.springframework.context.annotation.Configuration;
 import ru.spbe.redisexample.entity.ExampleEntity;
 import ru.spbe.redisloader.RedisLoader;
 import ru.spbe.redispublisher.RedisPublisher;
-import ru.spbe.redisstarter.Redis;
 import ru.spbe.redisstarter.RedisSet;
 
 @Configuration
@@ -27,26 +27,23 @@ public class CommonConfiguration {
             @Value("${example_entity.channel}") final String channelName){
         return new RedisSet(dataSetName, channelName);
     }
-
-    @Bean
-    public Redis redis(
-            @Value("${redis.host}") final String host,
-            @Value("${redis.port}") final int port){
-        return new Redis(host, port);
-    }
     //////////// Для публикации
-
     @Bean
-    public RedisPublisher<ExampleEntity> examplePublisher(RedisSet exampleRedisSet,
-                                                   Redis redis,
-                                                   ObjectMapper mapper){
-        return new  RedisPublisher<>(redis, exampleRedisSet, mapper);
+    public RedisPublisher<Integer, ExampleEntity> examplePublisher(
+            @Value("${redis.host}") final String host,
+            @Value("${redis.port}") final int port,
+            RedisSet exampleRedisSet,
+            ObjectMapper mapper){
+        return new  RedisPublisher<>(host, port, exampleRedisSet, mapper);
     }
 //////////// Для чтения данных
+
     @Bean
-    public RedisLoader<ExampleEntity> exampleLoader(RedisSet exampleRedisSet,
-                                                    Redis redis,
-                                                    ObjectMapper mapper){
-        return new RedisLoader<>(ExampleEntity.class, redis, exampleRedisSet, mapper);
+    public RedisLoader<Integer, ExampleEntity> exampleLoader(
+            @Value("${redis.host}") final String host,
+            @Value("${redis.port}") final int port,
+            RedisSet exampleRedisSet,
+            ObjectMapper mapper) throws JsonProcessingException {
+        return new RedisLoader<>(Integer.class, ExampleEntity.class, host, port, exampleRedisSet, mapper, true);
     }
 }
